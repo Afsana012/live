@@ -13,19 +13,10 @@ const TONE = {
   danger: "border-destructive/40 bg-destructive/20 text-red-300",
 };
 
-// Hard cap the ABR level (max bitrate) so the player never climbs to a variant the
-// upstream path can't sustain. The deployed VPS reaches Toffee's geo-locked CDN via
-// a pinned IP whose throughput is bursty (~50–340 KB/s); the default 720p variant
-// needs ~128 KB/s *steady*, so each time the path dips the buffer drains and the
-// stream freezes ~30s in. Capping to a lower bitrate (360p ≈ 64 KB/s by default)
-// keeps a buffer through the dips. Only enforced in production — local dev has good
-// bandwidth and should get full quality. Tune with NEXT_PUBLIC_MAX_BITRATE
-// (bits/sec); set it high (e.g. 5000000) to restore near-auto-ABR behaviour.
+// Optional ABR cap. By default both local and production use full auto quality.
+// Set NEXT_PUBLIC_MAX_BITRATE at build time only if you want to force a ceiling.
 // NOTE: NEXT_PUBLIC_* is inlined at BUILD time, so changing it needs a rebuild.
-const MAX_BITRATE =
-  process.env.NODE_ENV === "production"
-    ? Number(process.env.NEXT_PUBLIC_MAX_BITRATE) || 550000
-    : Infinity;
+const MAX_BITRATE = Number(process.env.NEXT_PUBLIC_MAX_BITRATE) || Infinity;
 
 export function VideoPlayer({ proxyUrl }) {
   const videoRef = useRef(null);
@@ -154,10 +145,8 @@ export function VideoPlayer({ proxyUrl }) {
       };
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        // Cap the auto ABR level to the highest level whose bitrate fits MAX_BITRATE.
-        // Capping autoLevelCapping instead of hard-locking currentLevel allows
-        // the player to automatically down-scale quality on network dips to avoid
-        // stalling, while preventing it from rising to an unsustainable 720p tier.
+        // Cap auto ABR only when NEXT_PUBLIC_MAX_BITRATE is set. With the default
+        // Infinity cap, hls.js can choose the best available level in production too.
         let cap = 0;
         let capBitrate = -1;
         for (let i = 0; i < hls.levels.length; i++) {
