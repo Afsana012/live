@@ -4,7 +4,7 @@ import {
   getCategories,
   normalizeCategory,
 } from "@/lib/channels";
-import { ChannelGrid } from "./components/ChannelGrid";
+import { ChannelGrid } from "./components/ChannelGrid"; 
 
 export const dynamic = "force-dynamic";
 
