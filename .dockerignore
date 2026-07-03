@@ -1,0 +1,16 @@
+# Reinstalled by Nixpacks
+node_modules
+
+# Rebuilt by Nixpacks
+.next
+out
+build
+
+# VCS & noise
+.git
+.gitignore
+*.log
+.DS_Store
+
+# NOTE: do NOT ignore `data/` — the app reads data/toffee_channel_data.json
+# from disk at runtime.

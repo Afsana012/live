@@ -1,0 +1,36 @@
+name: Sync Channel Data
+
+on:
+  schedule:
+    # Runs every 6 hours (At minute 0 of every 6th hour)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    # Allows you to manually trigger the sync from the GitHub Actions tab in your repo
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grants permission to push commits back to your repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download latest JSON data
+        run: |
+          # Fetch the raw JSON from the upstream public repository
+          curl -o data/toffee_channel_data.json -L "https://raw.githubusercontent.com/BINOD-XD/Toffee-Auto-Update-Playlist/main/toffee_channel_data.json"
+
+      - name: Check for changes and push
+        run: |
+          if git diff --quiet data/toffee_channel_data.json; then
+            echo "No changes detected in channel data. Skipping sync."
+          else
+            echo "Changes detected. Committing and pushing updates..."
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add data/toffee_channel_data.json
+            git commit -m "chore: sync toffee channel data from BINOD-XD/Toffee-Auto-Update-Playlist"
+            git push
+          fi
