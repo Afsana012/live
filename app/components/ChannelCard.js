@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { imgProxy } from "@/lib/urls";
 
-export function ChannelCard({ channel, viewerCount = 0 }) {
+export function ChannelCard({ channel, viewerCount = 0, isFavorite = false, onToggleFavorite }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <Link
       href={`/channel/${channel.id}`}
-      className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background animate-fadeInUp"
       aria-label={`Watch ${channel.name}`}
     >
       <Card className="gap-0 overflow-hidden p-0 transition-all duration-200 group-hover:-translate-y-1 group-hover:border-primary/60 group-hover:shadow-xl group-hover:shadow-primary/10">
@@ -32,7 +33,7 @@ export function ChannelCard({ channel, viewerCount = 0 }) {
             />
           ) : null}
 
-          {!loaded && <div className="absolute inset-0 animate-pulse bg-muted" />}
+          {!loaded && <div className="absolute inset-0 skeleton-shimmer" />}
 
           <Badge
             variant="destructive"
@@ -41,6 +42,28 @@ export function ChannelCard({ channel, viewerCount = 0 }) {
             <span className="size-1.5 animate-pulse rounded-full bg-white" />
             LIVE
           </Badge>
+
+          {/* Favorite heart toggle */}
+          {onToggleFavorite && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleFavorite(channel.id);
+              }}
+              className={cn(
+                "absolute right-2 top-2 grid size-7 place-items-center rounded-full transition-all duration-200",
+                "bg-black/40 backdrop-blur-sm hover:bg-black/60 hover:scale-110",
+                isFavorite ? "text-red-400" : "text-white/60 hover:text-white"
+              )}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart
+                className={cn("size-3.5 transition-all", isFavorite && "fill-red-400")}
+              />
+            </button>
+          )}
         </div>
 
         <div className="border-t border-border/60 p-3 flex items-center justify-between gap-2">

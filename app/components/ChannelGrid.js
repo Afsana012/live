@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import {
   Search,
   Trophy,
@@ -12,12 +12,14 @@ import {
   Baby,
   Radio,
   Tv,
+  Heart,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelCard } from "./ChannelCard";
 import { usePresence } from "./usePresence";
+import { useFavorites } from "./useFavorites";
 
 // Map the icon *name* (string, from the server) to a lucide component.
 const ICONS = {
@@ -34,17 +36,39 @@ const ICONS = {
 
 export function ChannelGrid({ items, categories, meta }) {
   const presence = usePresence("home");
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState("all");
+  const searchRef = useRef(null);
+
+  // ⌨️ Keyboard shortcuts: "/" to focus search, "Escape" to clear & blur
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "/" && document.activeElement?.tagName !== "INPUT") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === "Escape" && document.activeElement === searchRef.current) {
+        setQuery("");
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter((it) => {
-      const matchCat = active === "all" || it.category.slug === active;
+      const matchCat =
+        active === "all" ||
+        (active === "favorites" ? favorites.has(it.id) : it.category.slug === active);
       const matchQ = !q || it.name.toLowerCase().includes(q);
       return matchCat && matchQ;
     });
-  }, [items, query, active]);
+  }, [items, query, active, favorites]);
+
+  const hasFavorites = items.some((it) => favorites.has(it.id));
 
   return (
     <div>
@@ -76,12 +100,16 @@ export function ChannelGrid({ items, categories, meta }) {
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search channels…"
-              className="pl-9"
+              className="pl-9 pr-12"
               aria-label="Search channels"
             />
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+              /
+            </kbd>
           </div>
 
           <Tabs value={active} onValueChange={setActive}>
@@ -92,6 +120,15 @@ export function ChannelGrid({ items, categories, meta }) {
                   {items.length}
                 </span>
               </TabsTrigger>
+              {hasFavorites && (
+                <TabsTrigger value="favorites" className="flex-none px-3 gap-1">
+                  <Heart className="size-3.5 fill-red-400 text-red-400" />
+                  Favorites
+                  <span className="ml-1 text-xs text-muted-foreground/70">
+                    {items.filter((it) => favorites.has(it.id)).length}
+                  </span>
+                </TabsTrigger>
+              )}
               {categories.map((c) => {
                 const Icon = ICONS[c.icon] || Tv;
                 return (
@@ -113,16 +150,39 @@ export function ChannelGrid({ items, categories, meta }) {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
-            <Search className="size-8 text-muted-foreground/50" />
-            <p className="text-lg font-medium">No channels found</p>
-            <p className="text-sm text-muted-foreground">
-              Try a different search or category.
-            </p>
+            {active === "favorites" ? (
+              <>
+                <Heart className="size-8 text-muted-foreground/50" />
+                <p className="text-lg font-medium">No favorites yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Tap the heart on any channel to add it here.
+                </p>
+              </>
+            ) : (
+              <>
+                <Search className="size-8 text-muted-foreground/50" />
+                <p className="text-lg font-medium">No channels found</p>
+                <p className="text-sm text-muted-foreground">
+                  Try a different search or category.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {filtered.map((ch) => (
-              <ChannelCard key={ch.id} channel={ch} viewerCount={presence.channels[ch.id] || 0} />
+            {filtered.map((ch, idx) => (
+              <div
+                key={ch.id}
+                className="animate-fadeInUp"
+                style={{ animationDelay: `${Math.min(idx * 40, 600)}ms` }}
+              >
+                <ChannelCard
+                  channel={ch}
+                  viewerCount={presence.channels[ch.id] || 0}
+                  isFavorite={isFavorite(ch.id)}
+                  onToggleFavorite={toggleFavorite}
+                />
+              </div>
             ))}
           </div>
         )}
