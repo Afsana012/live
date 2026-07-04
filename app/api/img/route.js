@@ -9,6 +9,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigins = ["https://nova.tanvirmern.com", "http://localhost:3000"];
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : "https://nova.tanvirmern.com";
+
   const u = req.nextUrl.searchParams.get("u");
   if (!u) return respond("missing 'u' param", 400);
 
@@ -43,7 +47,7 @@ export async function GET(req) {
       "content-type": ct,
       // 24h + immutable: logos are content-addressed, safe to cache forever.
       "cache-control": "public, max-age=86400, immutable",
-      "access-control-allow-origin": "*",
+      "access-control-allow-origin": corsOrigin,
     },
   });
 }
