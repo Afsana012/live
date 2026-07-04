@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,14 @@ import { imgProxy } from "@/lib/urls";
 
 export function ChannelCard({ channel, viewerCount = 0, isFavorite = false, onToggleFavorite }) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef(null);
+
+  // Check if image is already cached/loaded when component mounts (resolves hydration race condition)
+  useEffect(() => {
+    if (imgRef.current?.complete) {
+      setLoaded(true);
+    }
+  }, []);
 
   return (
     <Link
@@ -21,6 +29,7 @@ export function ChannelCard({ channel, viewerCount = 0, isFavorite = false, onTo
         <div className="relative aspect-[4/3] overflow-hidden bg-linear-to-br from-muted/70 to-card">
           {channel.logo ? (
             <img
+              ref={imgRef}
               src={imgProxy(channel.logo)}
               alt=""
               loading="lazy"

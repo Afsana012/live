@@ -41,6 +41,32 @@ export function ChannelGrid({ items, categories, meta }) {
   const [active, setActive] = useState("all");
   const searchRef = useRef(null);
 
+  // Sync tab state with URL hash (e.g. #favorites) for mobile navigation compatibility
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === "#favorites") {
+        setActive("favorites");
+      } else if (window.location.hash === "" || window.location.hash === "#") {
+        setActive("all");
+      }
+    };
+    handleHash(); // Run on mount
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
+
+  // Update tab state & sync back to hash cleanly
+  const handleTabChange = (val) => {
+    setActive(val);
+    if (val === "favorites") {
+      window.location.hash = "favorites";
+    } else {
+      if (window.location.hash === "#favorites") {
+        window.history.replaceState(null, "", " ");
+      }
+    }
+  };
+
   // ⌨️ Keyboard shortcuts: "/" to focus search, "Escape" to clear & blur
   useEffect(() => {
     const handleKey = (e) => {
@@ -112,7 +138,7 @@ export function ChannelGrid({ items, categories, meta }) {
             </kbd>
           </div>
 
-          <Tabs value={active} onValueChange={setActive}>
+          <Tabs value={active} onValueChange={handleTabChange}>
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="all" className="flex-none px-3">
                 All
