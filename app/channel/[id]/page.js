@@ -12,6 +12,7 @@ import { VideoPlayer } from "@/app/components/VideoPlayer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChannelCard } from "@/app/components/ChannelCard";
+import { ActiveViewerCount } from "@/app/components/ActiveViewerCount";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ export default function ChannelPage({ params }) {
               <span className="size-1.5 animate-pulse rounded-full bg-white" />
               LIVE
             </Badge>
+            <ActiveViewerCount channelId={id} />
           </div>
           <div className="mt-1 text-sm text-muted-foreground">{category.label}</div>
         </div>

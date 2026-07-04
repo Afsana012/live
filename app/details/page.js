@@ -4,7 +4,7 @@ import { getMeta, getExpiryMs, getChannels, isPrivateChannel, normalizeCategory 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChannelCard } from "@/app/components/ChannelCard";
+import { PrivateChannelsGrid } from "./PrivateChannelsGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -127,11 +127,7 @@ export default function DetailsPage() {
           </div>
 
           {privateChannels.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
-              {privateChannels.map((ch) => (
-                <ChannelCard key={ch.id} channel={ch} />
-              ))}
-            </div>
+            <PrivateChannelsGrid items={privateChannels} />
           ) : (
             <p className="text-sm text-muted-foreground">No private channels configured.</p>
           )}

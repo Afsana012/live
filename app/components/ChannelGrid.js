@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelCard } from "./ChannelCard";
+import { usePresence } from "./usePresence";
 
 // Map the icon *name* (string, from the server) to a lucide component.
 const ICONS = {
@@ -32,6 +33,7 @@ const ICONS = {
 };
 
 export function ChannelGrid({ items, categories, meta }) {
+  const presence = usePresence("home");
   const [query, setQuery] = useState("");
   const [active, setActive] = useState("all");
 
@@ -120,7 +122,7 @@ export function ChannelGrid({ items, categories, meta }) {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {filtered.map((ch) => (
-              <ChannelCard key={ch.id} channel={ch} />
+              <ChannelCard key={ch.id} channel={ch} viewerCount={presence.channels[ch.id] || 0} />
             ))}
           </div>
         )}

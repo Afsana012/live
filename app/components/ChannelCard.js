@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { imgProxy } from "@/lib/urls";
 
-export function ChannelCard({ channel }) {
+export function ChannelCard({ channel, viewerCount = 0 }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -43,11 +43,22 @@ export function ChannelCard({ channel }) {
           </Badge>
         </div>
 
-        <div className="border-t border-border/60 p-3">
-          <div className="truncate text-sm font-semibold">{channel.name}</div>
-          <div className="mt-0.5 truncate text-xs text-muted-foreground">
-            {channel.category.label}
+        <div className="border-t border-border/60 p-3 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold">{channel.name}</div>
+            <div className="mt-0.5 truncate text-xs text-muted-foreground">
+              {channel.category.label}
+            </div>
           </div>
+          {viewerCount > 0 && (
+            <div 
+              className="shrink-0 flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 font-mono"
+              title={`${viewerCount} active viewer(s)`}
+            >
+              <span className="size-1 bg-emerald-400 animate-pulse rounded-full" />
+              {viewerCount}
+            </div>
+          )}
         </div>
       </Card>
     </Link>

@@ -48,6 +48,7 @@ function getCountdown(ms) {
 export function SiteHeader({ expiryMs }) {
   const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState({ dot: "bg-zinc-600", pulse: false, label: "Checking..." });
+  const [onlineCount, setOnlineCount] = useState(1);
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +63,24 @@ export function SiteHeader({ expiryMs }) {
     return () => clearInterval(interval);
   }, [expiryMs]);
 
+  useEffect(() => {
+    if (!mounted) return;
+
+    const fetchOnlineCount = async () => {
+      try {
+        const res = await fetch("/api/presence");
+        if (res.ok) {
+          const data = await res.json();
+          setOnlineCount(data.total || 1);
+        }
+      } catch {}
+    };
+
+    fetchOnlineCount();
+    const interval = setInterval(fetchOnlineCount, 8000);
+    return () => clearInterval(interval);
+  }, [mounted]);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -75,12 +94,24 @@ export function SiteHeader({ expiryMs }) {
         </Link>
 
         {mounted && (
-          <div
-            className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium transition-all"
-            title={`Stream cookie status: ${status.label}`}
-          >
-            <span className={cn("size-2 rounded-full", status.dot, status.pulse && "animate-pulse")} />
-            <span className="text-muted-foreground font-mono">{status.label}</span>
+          <div className="flex items-center gap-2">
+            {/* Active Users Counter */}
+            <div 
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+              title={`${onlineCount} active user(s) on the site`}
+            >
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-mono">{onlineCount}</span> online
+            </div>
+
+            {/* Cookie Expiration Status */}
+            <div
+              className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium transition-all"
+              title={`Stream cookie status: ${status.label}`}
+            >
+              <span className={cn("size-2 rounded-full", status.dot, status.pulse && "animate-pulse")} />
+              <span className="text-muted-foreground font-mono">{status.label}</span>
+            </div>
           </div>
         )}
       </div>
