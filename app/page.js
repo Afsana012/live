@@ -3,6 +3,7 @@ import {
   getMeta,
   getCategories,
   normalizeCategory,
+  isPrivateChannel,
 } from "@/lib/channels";
 import { ChannelGrid } from "./components/ChannelGrid"; 
 
@@ -14,12 +15,14 @@ export default function HomePage() {
   const categories = getCategories();
 
   // Minimal serializable shape for the client: id, name, logo + normalized category.
-  const items = channels.map((c, i) => ({
-    id: i,
-    name: c.name,
-    logo: c.logo,
-    category: normalizeCategory(c.category_name),
-  }));
+  const items = channels
+    .map((c, i) => ({
+      id: i,
+      name: c.name,
+      logo: c.logo,
+      category: normalizeCategory(c.category_name),
+    }))
+    .filter((item) => !isPrivateChannel(item.name));
 
   return <ChannelGrid items={items} categories={categories} meta={meta} />;
 }

@@ -1,25 +1,66 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Map the parsed cookie-expiry epoch (ms) to a status pill { dot, pulse, label }.
- * Server-rendered, so "now" is request time — fine for this local app.
+ * Map the parsed cookie-expiry epoch (ms) to a status pill { dot, pulse, label } with countdown.
  */
-function cookieStatus(ms) {
+function getCountdown(ms) {
   if (!ms) return { dot: "bg-amber-400", pulse: true, label: "No expiry date" };
-  const days = (ms - Date.now()) / 86400000;
-  if (days < 0) return { dot: "bg-red-500", pulse: true, label: "Cookie expired" };
-  if (days < 1) return { dot: "bg-red-500", pulse: true, label: "Expires today" };
-  if (days < 3) {
-    const d = Math.max(1, Math.floor(days));
-    return { dot: "bg-amber-400", pulse: true, label: `Expires in ${d} day${d === 1 ? "" : "s"}` };
+  
+  const diff = ms - Date.now();
+  if (diff <= 0) {
+    return { dot: "bg-red-500", pulse: true, label: "Cookie expired" };
   }
-  return { dot: "bg-emerald-400", pulse: false, label: "Cookie active" };
+
+  const totalSecs = Math.floor(diff / 1000);
+  const days = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const minutes = Math.floor((totalSecs % 3600) / 60);
+  const seconds = totalSecs % 60;
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0 || days > 0) parts.push(`${hours}h`);
+  if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
+  parts.push(`${seconds}s`);
+
+  const label = `Expires in ${parts.join(" ")}`;
+
+  const remainingDays = diff / 86400000;
+  let dot = "bg-emerald-400";
+  let pulse = false;
+  
+  if (remainingDays < 1) {
+    dot = "bg-red-500";
+    pulse = true;
+  } else if (remainingDays < 3) {
+    dot = "bg-amber-400";
+    pulse = true;
+  }
+
+  return { dot, pulse, label };
 }
 
 export function SiteHeader({ expiryMs }) {
-  const status = cookieStatus(expiryMs);
+  const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState({ dot: "bg-zinc-600", pulse: false, label: "Checking..." });
+
+  useEffect(() => {
+    setMounted(true);
+    setStatus(getCountdown(expiryMs));
+
+    if (!expiryMs) return;
+
+    const interval = setInterval(() => {
+      setStatus(getCountdown(expiryMs));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiryMs]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
@@ -33,13 +74,15 @@ export function SiteHeader({ expiryMs }) {
           </span>
         </Link>
 
-        <div
-          className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium"
-          title={`Stream cookie status: ${status.label}`}
-        >
-          <span className={cn("size-2 rounded-full", status.dot, status.pulse && "animate-pulse")} />
-          <span className="text-muted-foreground">{status.label}</span>
-        </div>
+        {mounted && (
+          <div
+            className="flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-medium transition-all"
+            title={`Stream cookie status: ${status.label}`}
+          >
+            <span className={cn("size-2 rounded-full", status.dot, status.pulse && "animate-pulse")} />
+            <span className="text-muted-foreground font-mono">{status.label}</span>
+          </div>
+        )}
       </div>
     </header>
   );

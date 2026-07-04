@@ -64,11 +64,6 @@ export function ChannelGrid({ items, categories, meta }) {
           </h1>
           <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
             Live TV, beautifully free. Stream news, sports, movies and more.
-            {meta.updatedOn ? (
-              <span className="block text-sm text-muted-foreground/70 sm:inline sm:ml-1">
-                Updated {meta.updatedOn}.
-              </span>
-            ) : null}
           </p>
         </div>
       </section>

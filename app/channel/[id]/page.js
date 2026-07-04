@@ -5,6 +5,7 @@ import {
   getChannel,
   getChannels,
   normalizeCategory,
+  isPrivateChannel,
 } from "@/lib/channels";
 import { imgProxy } from "@/lib/urls";
 import { VideoPlayer } from "@/app/components/VideoPlayer";
@@ -22,10 +23,10 @@ export default function ChannelPage({ params }) {
   const proxyUrl = "/api/proxy?u=" + encodeURIComponent(channel.link);
   const category = normalizeCategory(channel.category_name);
 
-  // Related channels: same category, excluding the current one.
+  // Related channels: same category, excluding the current one, and filtering out private channels.
   const related = getChannels()
     .map((c, i) => ({ id: i, name: c.name, logo: c.logo, cat: normalizeCategory(c.category_name) }))
-    .filter((x) => x.cat.slug === category.slug && x.id !== id)
+    .filter((x) => x.cat.slug === category.slug && x.id !== id && !isPrivateChannel(x.name))
     .slice(0, 12)
     .map(({ id, name, logo, cat }) => ({ id, name, logo, category: cat }));
 
