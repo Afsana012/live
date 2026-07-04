@@ -325,7 +325,7 @@ export function VideoPlayer({ proxyUrl }) {
         </Badge>
 
         {/* Real-time Diagnostics HUD */}
-        <div className="absolute right-3 top-3 select-none rounded-lg border border-white/10 bg-black/75 px-3 py-2 text-[10px] font-mono text-zinc-300 backdrop-blur-md">
+        <div className="hidden sm:block absolute right-3 top-3 select-none rounded-lg border border-white/10 bg-black/75 px-3 py-2 text-[10px] font-mono text-zinc-300 backdrop-blur-md">
           <div className="font-bold text-white mb-1 border-b border-white/10 pb-1">⚡ DIAGNOSTICS HUD</div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
             <span className="text-zinc-500">Buffer:</span>
